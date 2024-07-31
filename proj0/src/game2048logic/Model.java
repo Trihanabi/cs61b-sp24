@@ -24,6 +24,8 @@ public class Model {
     /** Largest piece value. */
     public static final int MAX_PIECE = 2048;
 
+    private boolean isMerge = false;
+
     /** A new 2048 game on a board of size SIZE with no pieces
      *  and score 0. */
     public Model(int size) {
@@ -85,6 +87,13 @@ public class Model {
      * */
     public boolean emptySpaceExists() {
         // TODO: Task 2. Fill in this function.
+        for (int i = 0; i < this.size() ; i++) {
+            for (int j = 0; j < this.size(); j++) {
+                if ( this.tile(i, j) == null) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -95,6 +104,13 @@ public class Model {
      */
     public boolean maxTileExists() {
         // TODO: Task 3. Fill in this function.
+        for (int i = 0; i < this.size() ; i++) {
+            for (int j = 0; j < this.size(); j++) {
+                if ( this.tile(i, j) != null && this.tile(i, j).value() == this.MAX_PIECE) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -106,6 +122,29 @@ public class Model {
      */
     public boolean atLeastOneMoveExists() {
         // TODO: Fill in this function.
+        if (this.emptySpaceExists()) { return true;}
+        for (int i = 0; i < this.size(); i++) {
+            for (int j = 0; j < this.size(); j++) {
+                if ( this.tile(i, j) != null)  {
+                    if (i == this.size() - 1 && j == this.size() - 1) {
+                        continue;
+                    } else if (i == this.size() - 1) {
+                        if (tile(i, j).value() == tile(i, j+1).value()) {
+                            return true;
+                        }
+                    } else if (j == this.size() - 1) {
+                        if (tile(i, j).value() == tile(i+1, j).value()) {
+                            return true;
+                        }
+                    }
+                    else {
+                        if (tile(i, j).value() == tile(i+1, j).value() ||
+                                tile(i, j).value() == tile(i, j+1).value()) {
+                        return true;
+                    }
+                }
+            }
+        }}
         return false;
     }
 
@@ -128,7 +167,35 @@ public class Model {
         int myValue = currTile.value();
         int targetY = y;
 
-        // TODO: Tasks 5, 6, and 10. Fill in this function.
+
+//      TODO: Tasks 5, 6, and 10. Fill in this function.
+        for (int i = y + 1; i < size(); i++) {
+            if (this.tile(x, i) == null) {
+                if (i == size() - 1) {
+                    this.board.move(x, i, currTile);
+                    break;
+                } else {
+                    continue;
+                }
+            }
+            if (this.tile(x, i).value() == myValue) {
+                if (!isMerge) {
+                    this.board.move(x, i, currTile);
+                    score += board.tile(x, i).value();
+                    this.isMerge = true;
+                } else if (i != y+1) {
+                    this.board.move(x, i - 1, currTile);
+                    this.isMerge = false;
+                }
+                break;
+            } else if (this.tile(x, i).value() != myValue ) {
+                if ( i != y+1) {
+                    this.board.move(x, i - 1, currTile);
+                }
+                this.isMerge = false;
+                break;
+            }
+        }
     }
 
     /** Handles the movements of the tilt in column x of the board
@@ -138,10 +205,21 @@ public class Model {
      * */
     public void tiltColumn(int x) {
         // TODO: Task 7. Fill in this function.
+        for (int i = size() - 2; i >= 0;i--) {
+            if (tile(x, i) != null) {
+                moveTileUpAsFarAsPossible(x, i);
+            }
+        }
     }
 
     public void tilt(Side side) {
         // TODO: Tasks 8 and 9. Fill in this function.
+        board.setViewingPerspective(side);
+        for (int i = 0; i < size(); i++) {
+            tiltColumn(i);
+            this.isMerge = false;
+        }
+        board.setViewingPerspective(Side.NORTH);
     }
 
     /** Tilts every column of the board toward SIDE.
